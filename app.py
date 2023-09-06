@@ -151,7 +151,7 @@ def upload():
         if result == "8":
             result=="Waakye"
             result = "Waakye" + '\n' + "Nutritional Info: Waakye contains 5 main ingredients:" + '\n' +  "Rice, Beans, Egg, Fish and Vegetables." + '\n' + "This gives carbohydrate, protein and vitamins." + '\n' + "Learn More:" + "https://travelfoodatlas.com/ghanian-waakye-recipe"    
-        return result 
+            return render_template("index.html", result)
     return "File cannot be processed."
 
 if __name__ == '__main__':
