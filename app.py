@@ -6,24 +6,29 @@ import glob
 import re
 import numpy as np
 import tensorflow as tf
+import tensorflow_model_optimization as tfmot
 # Keras
-from keras.applications.imagenet_utils import preprocess_input, decode_predictions
+#from keras.applications.imagenet_utils import preprocess_input, decode_predictions
 from keras.models import load_model
 #from keras.preprocessing import image
 from keras.utils import load_img, img_to_array
-
+#import cv2
 # Flask utils
 from flask import Flask, redirect, url_for, request, render_template
 from werkzeug.utils import secure_filename
 from gevent.pywsgi import WSGIServer
 from PIL import Image
-
+import base64
+from io import BytesIO
+import io
+#from tf.keras.applications.mobilenet import preprocess_input
+#tf.keras.applications.mobilenet.preprocess_input
 # Define a flask app
 app = Flask(__name__)
 
 # Model saved with Keras model.save()
 #MODEL_PATH = 'models/model_resnet.h5'
-MODEL_PATH = 'models/saved_inceptionv3model.h5'
+MODEL_PATH = 'models/sequential_model3.h5'
 #MODEL_PATH = ''
 # Load your trained model
 model = load_model(MODEL_PATH)
@@ -38,14 +43,15 @@ model.make_predict_function()          # Necessary
 print('Model loaded. Check http://127.0.0.1:5000/')
 
 
-
 def preprocess_img(img_path):
     op_img = Image.open(img_path)
+    op_img =  op_img.convert('RGB')
     img_resize = op_img.resize((150, 150))
-    img2arr = img_to_array(img_resize) / 255.0
+    img2arr = img_to_array(img_resize)
+    img2arr = np.expand_dims(img2arr, axis=0)
+    img2arr /= 255.
     img_reshape = img2arr.reshape(1, 150, 150, 3)
     return img_reshape
-
 
 # Predicting function
 def predict_result(predict):
@@ -97,15 +103,22 @@ def upload():
     if request.method == 'POST':
         # Get the file from post request
         f = request.files['file']
+        img = preprocess_img(request.files['file'].stream)
+        preds = predict_result(img)
+        # image_string = base64.b64encode(f.read())
+        # image = base64_to_np(image_string)
+        # img = preprocess_image(image)
+        # preds = predict_result(np.array([img]))
 
         # Save the file to ./uploads
-        basepath = os.path.dirname(__file__)
-        file_path = os.path.join(
-            basepath, 'uploads', secure_filename(f.filename))
-        f.save(file_path)
+        # basepath = os.path.dirname(__file__)
+        # file_path = os.path.join(basepath, secure_filename(f.filename))
+        # #file_path = os.path.join(
+        #  #   basepath, 'uploads', secure_filename(f.filename))
+        # f.save(file_path)
 
         # Make prediction
-        preds = model_predict(file_path, model)
+        #preds = model_predict(image_string, model)
         # Process your result for human
         # pred_class = preds.argmax(axis=-1)            # Simple argmax
         #pred_class = decode_predictions(preds, top=9)   # ImageNet Decode
